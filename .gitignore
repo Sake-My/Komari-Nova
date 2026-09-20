@@ -1,0 +1,45 @@
+# 历史归档
+/Old/
+
+# 编译与测试产物
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+__debug*
+*.test
+*.out
+/komari
+/Komari-Nova
+/dist/
+
+# 本地运行数据与备份
+komari.db
+/data/
+/utils/geoip/data/
+/backup/
+/web/filemanager/data/
+
+# 本地环境与编辑器配置
+.env
+.vscode/
+.codex/
+
+# 本地 Go 工作区
+go.work
+go.work.sum
+
+# Markdown：默认忽略后续新增文档，仅放行当前已确认的 8 份
+*.[mM][dD]
+!/README.md
+!/README_zh-cn.md
+!/pkg/jsruntime/README.md
+!/web/public/readme.md
+!/web/rpc/jsonrpc/README.md
+!/.github/ISSUE_TEMPLATE/bug_report.md
+!/.github/ISSUE_TEMPLATE/feature_request.md
+!/.github/ISSUE_TEMPLATE/general_issue.md
+
+# 本地维护记录始终不提交
+/hf.md

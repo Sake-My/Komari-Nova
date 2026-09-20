@@ -1,0 +1,56 @@
+# Komari
+
+![Badge](https://hitscounter.dev/api/hit?url=https%3A%2F%2Fgithub.com%2FSake-My%2FKomari-Nova&label=&icon=github&color=%23a370f7&message=&style=flat&tz=UTC)
+
+![komari](https://socialify.git.ci/Sake-My/Komari-Nova/image?description=1&font=Inter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fkomari-monitor%2Fkomari-web%2Fd54ce1288df41ead08aa19f8700186e68028a889%2Fpublic%2Ffavicon.png&name=1&owner=1&pattern=Plus&pulls=1&stargazers=1&theme=Auto)
+
+[English](./README.md) | [简体中文](./README_zh-cn.md)
+
+Komari 是一款轻量级的自托管服务器监控工具，旨在提供简单、高效的服务器性能监控解决方案。它支持通过 Web 界面查看服务器状态，并通过轻量级 Agent 收集数据。
+
+> [!WARNING]
+> Komari 是一款自托管的监控/控制程序，仅应部署在你拥有或已获得授权管理的系统上。在未获授权的情况下部署、访问、持久化、执行命令及从事其他滥用行为，用户需要自行承担部署和使用 Komari 的责任。开发者不对未经授权或滥用行为及其后果承担责任。
+
+本仓库基于 [komari-monitor/komari](https://github.com/komari-monitor/komari)，由 [Sake-My/Komari-Nova](https://github.com/Sake-My/Komari-Nova) 继续维护。程序名称保持 `komari`，前端暂时沿用 [komari-monitor/komari-web](https://github.com/komari-monitor/komari-web)。
+
+[上游文档（通用参考）](https://www.komari.wiki/)；本仓库的下载和部署地址以以下说明为准。
+
+## 特性
+
+- **实时监控**: 秒级实时数据展示。
+- **轻量高效**：低资源占用，适合各种规模的服务器。
+- **自托管**：完全掌控数据隐私，部署简单。
+- **Web 界面**：直观的监控仪表盘，易于使用。
+- **极强的可扩展性**: 支持自定义主题和插件。
+
+## 快速开始
+
+从 [本仓库的 Releases](https://github.com/Sake-My/Komari-Nova/releases) 下载服务端二进制文件。Linux 可使用 [install-komari.sh](https://github.com/Sake-My/Komari-Nova/blob/main/install-komari.sh) 安装和管理服务。
+
+Docker 部署：
+
+```bash
+docker run -d --name komari --restart unless-stopped \
+  -p 25774:25774 \
+  -v "$(pwd)/data:/app/data" \
+  ghcr.io/sake-my/komari-nova:latest
+```
+
+启动后访问 `http://<服务器地址>:25774`。本仓库完成首次发布及对应构建流程后，才会提供可下载的二进制文件和容器镜像。
+
+## 截图
+
+| 页面         | 截图                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 主页仪表盘   | <img src="https://b2.akz.moe/awesome-pictures/komari-screenshot/%E4%B8%BB%E9%A1%B5%E4%BB%AA%E8%A1%A8%E7%9B%98.webp" width="800" alt="主页仪表盘">            |
+| 后台仪表盘   | <img src="https://b2.akz.moe/awesome-pictures/komari-screenshot/%E5%90%8E%E5%8F%B0%E4%BB%AA%E8%A1%A8%E7%9B%98.webp" width="800" alt="后台仪表盘">            |
+| 历史图表     | <img src="https://b2.akz.moe/awesome-pictures/komari-screenshot/%E5%8E%86%E5%8F%B2%E5%9B%BE%E8%A1%A8.webp" width="800" alt="历史图表">                       |
+| 网页终端     | <img src="https://b2.akz.moe/awesome-pictures/komari-screenshot/%E7%BD%91%E9%A1%B5%E7%BB%88%E7%AB%AF.webp" width="800" alt="网页终端">                       |
+| 主题可自定义 | <img src="https://b2.akz.moe/awesome-pictures/komari-screenshot/%E4%B8%BB%E9%A2%98%E5%8F%AF%E8%87%AA%E5%AE%9A%E4%B9%89.webp" width="800" alt="主题可自定义"> |
+| 主题市场     | <img src="https://b2.akz.moe/awesome-pictures/komari-screenshot/%E4%B8%BB%E9%A2%98%E5%B8%82%E5%9C%BA.webp" width="800" alt="主题市场">                       |
+
+## 上游贡献者
+
+感谢原 Komari 作者及所有上游贡献者。以下贡献者列表属于 [komari-monitor/komari](https://github.com/komari-monitor/komari) 上游项目；原版权及许可声明保留在 [LICENSE](./LICENSE) 和 [NOTICE](./NOTICE) 中。
+
+<a href="https://github.com/komari-monitor/komari/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=komari-monitor/komari" alt="Komari 贡献者" width="600"></a>
