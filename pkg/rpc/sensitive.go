@@ -1,7 +1,7 @@
 package rpc
 
 // sensitive.go
-// 敏感操作登记表。被标记的方法（如 admin:exec）在通过角色鉴权后，仍需额外的
+// 敏感操作登记表。被标记的方法（由各业务方法声明）在通过角色鉴权后，仍需额外的
 // 敏感操作二次验证（sensitive 2FA）。登记与传输无关，由 RPC 边界统一判定，
 // 确保所有调用入口行为一致。
 
@@ -12,7 +12,7 @@ var (
 	sensitiveMethods = map[string]bool{}
 )
 
-// MarkSensitive 标记某方法为敏感操作。method 为完整方法名（如 "admin:exec"）。
+// MarkSensitive 标记某方法为敏感操作。method 为完整方法名。
 // 重复标记是幂等的。供方法注册处声明。
 func MarkSensitive(method string) {
 	muSensitive.Lock()

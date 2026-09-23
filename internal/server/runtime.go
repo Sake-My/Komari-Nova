@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Sake-My/Komari-Nova/database"
 	"github.com/Sake-My/Komari-Nova/database/accounts"
 	"github.com/Sake-My/Komari-Nova/database/auditlog"
@@ -30,6 +29,7 @@ import (
 	recoveryweb "github.com/Sake-My/Komari-Nova/web/recovery"
 	"github.com/Sake-My/Komari-Nova/web/router"
 	"github.com/Sake-My/Komari-Nova/web/security"
+	"github.com/gin-gonic/gin"
 )
 
 // ErrRestartRequested is returned after a clean shutdown when a configuration
@@ -208,13 +208,7 @@ func registerScheduledWork() {
 	}
 }
 
-const taskResultRetentionDays = 30
-
 func cleanupScheduledData() {
-	before := time.Now().UTC().Add(-24 * time.Hour * taskResultRetentionDays)
-	if err := tasks.ClearTaskResultsByTimeBefore(before); err != nil {
-		logger.Errorf("server", "Failed to clean expired task results: %v", err)
-	}
 	auditlog.RemoveOldLogs()
 	accounts.RemoveExpiredSessions()
 }

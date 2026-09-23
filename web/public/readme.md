@@ -4,7 +4,7 @@
 
 ### Frontend Repository
 
-- **Frontend project repository**: https://github.com/komari-monitor/komari-web
+- **Frontend project repository**: https://github.com/Sake-My/Komari-Nova-Web
 
 ### Build Requirements
 
@@ -15,7 +15,7 @@
 
 ### Important Note
 
-The backend is maintained at https://github.com/Sake-My/Komari-Nova. The frontend repository remains https://github.com/komari-monitor/komari-web.
+The backend is maintained at https://github.com/Sake-My/Komari-Nova. The frontend is maintained at https://github.com/Sake-My/Komari-Nova-Web.
 
 ---
 
@@ -23,7 +23,7 @@ The backend is maintained at https://github.com/Sake-My/Komari-Nova. The fronten
 
 ### 前端项目仓库
 
-- **前端项目地址**: https://github.com/komari-monitor/komari-web
+- **前端项目地址**: https://github.com/Sake-My/Komari-Nova-Web
 
 ### 构建要求
 
@@ -34,7 +34,7 @@ The backend is maintained at https://github.com/Sake-My/Komari-Nova. The fronten
 
 ### 重要提醒
 
-后端维护仓库为 https://github.com/Sake-My/Komari-Nova，前端暂时保持 https://github.com/komari-monitor/komari-web。
+后端维护仓库为 https://github.com/Sake-My/Komari-Nova，前端维护仓库为 https://github.com/Sake-My/Komari-Nova-Web。
 
 ---
 
@@ -42,7 +42,7 @@ The backend is maintained at https://github.com/Sake-My/Komari-Nova. The fronten
 
 ### フロントエンドプロジェクトリポジトリ
 
-- **フロントエンドプロジェクトアドレス**: https://github.com/komari-monitor/komari-web
+- **フロントエンドプロジェクトアドレス**: https://github.com/Sake-My/Komari-Nova-Web
 
 ### ビルド要件
 
@@ -53,7 +53,7 @@ The backend is maintained at https://github.com/Sake-My/Komari-Nova. The fronten
 
 ### 重要な注意事項
 
-バックエンドの保守用リポジトリは https://github.com/Sake-My/Komari-Nova。フロントエンドは引き続き https://github.com/komari-monitor/komari-web を使用する。
+バックエンドの保守用リポジトリは https://github.com/Sake-My/Komari-Nova。フロントエンドの保守用リポジトリは https://github.com/Sake-My/Komari-Nova-Web を使用する。
 
 ---
 
@@ -61,7 +61,7 @@ The backend is maintained at https://github.com/Sake-My/Komari-Nova. The fronten
 
 ```bash
 # Clone frontend repository / 克隆前端仓库 / フロントエンドリポジトリをクローン
-git clone https://github.com/komari-monitor/komari-web
+git clone https://github.com/Sake-My/Komari-Nova-Web komari-web
 cd komari-web
 
 # Install dependencies and build / 安装依赖并构建 / 依存関係をインストールしてビルド

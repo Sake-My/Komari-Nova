@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Sake-My/Komari-Nova/internal/config"
+	"github.com/gin-gonic/gin"
 )
 
 //go:embed defaultTheme/komari-theme.json
@@ -119,6 +119,29 @@ func isSafePath(basePath, targetPath string) bool {
 	return !strings.HasPrefix(rel, "..") && rel != ".."
 }
 
+// isRemovedRemoteControlPath 阻止已移除的接口和页面落入 SPA 回退。
+func isRemovedRemoteControlPath(requestPath string) bool {
+	requestPath = path.Clean(requestPath)
+	for _, prefix := range []string{
+		"/terminal",
+		"/admin/exec",
+		"/admin/settings/xtermjs",
+		"/api/admin/task",
+		"/api/admin/settings/xtermjs",
+		"/api/clients/terminal",
+	} {
+		if requestPath == prefix || strings.HasPrefix(requestPath, prefix+"/") {
+			return true
+		}
+	}
+	clientPath, ok := strings.CutPrefix(requestPath, "/api/admin/client/")
+	if !ok {
+		return false
+	}
+	_, resource, ok := strings.Cut(clientPath, "/")
+	return ok && (resource == "terminal" || strings.HasPrefix(resource, "terminal/"))
+}
+
 // Static 注册静态资源和 SPA 路由处理
 func Static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc)) {
 	static(r, noRoute, false)
@@ -207,7 +230,7 @@ func static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc), force
 		shouldReplace := true
 
 		// 特殊页面：强制使用 default 主题，且不进行内容替换
-		if forceDefaultTheme || strings.HasPrefix(reqPath, "/admin") || strings.HasPrefix(reqPath, "/terminal") {
+		if forceDefaultTheme || strings.HasPrefix(reqPath, "/admin") {
 			currentTheme = DefaultTheme
 			shouldReplace = false
 		}
@@ -299,6 +322,10 @@ func static(r *gin.RouterGroup, noRoute func(handlers ...gin.HandlerFunc), force
 
 	// 3. SPA 路由 (noRoute)
 	noRoute(func(c *gin.Context) {
+		if isRemovedRemoteControlPath(c.Request.URL.Path) {
+			c.Status(http.StatusGone)
+			return
+		}
 		if c.Request.Method != http.MethodGet {
 			c.Status(http.StatusNotFound)
 			return

@@ -14,13 +14,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Sake-My/Komari-Nova/pkg/jsruntime"
+	"github.com/Sake-My/Komari-Nova/pkg/jsruntime/httpbody"
+	"github.com/Sake-My/Komari-Nova/pkg/rpc"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/buffer"
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/gin-gonic/gin"
-	"github.com/Sake-My/Komari-Nova/pkg/jsruntime"
-	"github.com/Sake-My/Komari-Nova/pkg/jsruntime/httpbody"
-	"github.com/Sake-My/Komari-Nova/pkg/rpc"
 )
 
 // registerServerModule registers the "server" native module for one plugin
@@ -47,7 +47,7 @@ import (
 //	                                      into every text/html response:
 //	                                      head before </head>, body before
 //	                                      </body> (all pages, including the
-//	                                      admin and terminal pages)
+//	                                      admin pages)
 //	server.call(method, params...)        call a registered RPC method with
 //	                                      admin authority; resolves to the RPC
 //	                                      result or rejects with an Error

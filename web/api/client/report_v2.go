@@ -10,16 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/Sake-My/Komari-Nova/database/clients"
-	"github.com/Sake-My/Komari-Nova/database/tasks"
 	v2 "github.com/Sake-My/Komari-Nova/protocol/v2"
 	"github.com/Sake-My/Komari-Nova/utils/notifier"
 	agent_runtime "github.com/Sake-My/Komari-Nova/web/agent"
 	"github.com/Sake-My/Komari-Nova/web/api"
 	"github.com/Sake-My/Komari-Nova/web/connection"
 	"github.com/Sake-My/Komari-Nova/web/filemanager"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 func readMaybeCompressedBody(r *http.Request) ([]byte, error) {
@@ -76,19 +75,6 @@ func handleV2RPC(uuid string, req v2.Request, allowWait bool) v2.Response {
 		}
 		if err := ingestPingResult(uuid, params.TaskID, params.Value); err != nil {
 			return v2.Error(req.ID, -32000, "failed to save ping result", err.Error())
-		}
-		return v2.Success(req.ID, gin.H{"status": "success"})
-	case v2.MethodAgentTaskResult:
-		var params v2.TaskResultParams
-		if err := bindV2Params(req.Params, &params); err != nil {
-			return v2.Error(req.ID, -32602, "invalid task result params", err.Error())
-		}
-		finishedAt := params.FinishedAt
-		if finishedAt.IsZero() {
-			finishedAt = time.Now().UTC()
-		}
-		if err := tasks.SaveTaskResult(params.TaskID, uuid, params.Result, params.ExitCode, finishedAt); err != nil {
-			return v2.Error(req.ID, -32000, "failed to save task result", err.Error())
 		}
 		return v2.Success(req.ID, gin.H{"status": "success"})
 	case v2.MethodAgentPull:
