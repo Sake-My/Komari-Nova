@@ -19,6 +19,7 @@ komari.db
 /data/
 /utils/geoip/data/
 /backup/
+/cache/
 /web/filemanager/data/
 
 # 本地环境与编辑器配置

@@ -6,16 +6,18 @@ import (
 )
 
 const (
-	Version               = "2.0"
-	MethodAgentReport     = "agent.report"
-	MethodAgentBasicInfo  = "agent.basicInfo"
-	MethodAgentPingResult = "agent.pingResult"
-	MethodAgentPing       = "agent.ping"
-	MethodAgentMessage    = "agent.message"
-	MethodAgentEvent      = "agent.event"
-	MethodAgentPull       = "agent.pull"
-	MethodAgentFile       = "agent.file"
-	MethodAgentFileResult = "agent.file.result"
+	Version                        = "2.0"
+	MethodAgentReport              = "agent.report"
+	MethodAgentBasicInfo           = "agent.basicInfo"
+	MethodAgentPingResult          = "agent.pingResult"
+	MethodAgentPing                = "agent.ping"
+	MethodAgentMessage             = "agent.message"
+	MethodAgentEvent               = "agent.event"
+	MethodAgentPull                = "agent.pull"
+	MethodAgentFile                = "agent.file"
+	MethodAgentFileResult          = "agent.file.result"
+	MethodAgentStartupConfig       = "agent.startupConfig"
+	MethodAgentStartupConfigResult = "agent.startupConfig.result"
 )
 
 type Request struct {
@@ -161,6 +163,17 @@ type MessageParams struct {
 type EventParams struct {
 	Type string `json:"type"`
 	Data any    `json:"data,omitempty"`
+}
+
+type StartupConfigParams struct {
+	RequestID string `json:"request_id"`
+}
+
+// Config 包含生效配置和凭据，只能返回给发起请求的管理员，不能用于公开节点信息。
+type StartupConfigResult struct {
+	RequestID string         `json:"request_id"`
+	Config    map[string]any `json:"config,omitempty"`
+	Error     string         `json:"error,omitempty"`
 }
 
 // FileOperation is metadata-only. File contents travel through the dedicated

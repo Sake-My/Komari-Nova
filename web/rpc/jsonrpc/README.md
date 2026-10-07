@@ -121,6 +121,13 @@ Go 宿主可注册方法并用 `Allow` 声明访问规则。需要统一私有�
 | `public` | getMe、getNodesInformation、getPublicSettings、getVersion、getClientRecentRecords、getRecordsByUUID、getPingRecords、getPublicPingTasks、recordVisitorEvent |
 | Agent v2 | `agent.report`、`agent.basicInfo`、`agent.pingResult`、`agent.pull`（`/api/clients/v2/rpc`） |
 
+### Agent 管理接口
+
+以下方法通过 `/api/rpc2` 调用，仅允许管理员访问；需要在线且支持相应 v2 消息的 Agent。
+
+- `admin:getAgentStartupConfig`：传入 `uuid`，返回 Agent 实际生效的启动配置（包含凭据）。此方法启用敏感操作二次验证，最多等待 20 秒；配置不会写入公开节点信息。
+- Agent 通过 `agent.startupConfig.result` 返回启动配置，后端按已认证的 Agent UUID 和请求 ID 共同匹配，拒绝过期或其他节点的响应。
+
 ### 声明式路由桥 `Bind`
 
 `web/rpc/jsonrpc/bridge.go` 提供：

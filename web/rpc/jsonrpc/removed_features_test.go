@@ -9,6 +9,7 @@ import (
 
 func TestRemovedRemoteExecutionMethodsUnavailableToAdmin(t *testing.T) {
 	methods := []string{
+		"admin:switchAgentVersion",
 		"admin:exec",
 		"admin:getTasks",
 		"admin:getTaskById",
