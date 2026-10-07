@@ -17,7 +17,6 @@ import (
 	agent_runtime "github.com/Sake-My/Komari-Nova/web/agent"
 	"github.com/Sake-My/Komari-Nova/web/api"
 	"github.com/Sake-My/Komari-Nova/web/connection"
-	"github.com/Sake-My/Komari-Nova/web/filemanager"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -92,16 +91,6 @@ func handleV2RPC(uuid string, req v2.Request, allowWait bool) v2.Response {
 		return v2.Success(req.ID, gin.H{
 			"events": agent_runtime.WaitV2Events(uuid, params.AckEventIDs, timeout),
 		})
-	case v2.MethodAgentFileResult:
-		var params v2.FileResult
-		if err := bindV2Params(req.Params, &params); err != nil {
-			return v2.Error(req.ID, -32602, "invalid file result params", err.Error())
-		}
-		params.UUID = uuid
-		if !filemanager.Resolve(params) {
-			return v2.Error(req.ID, -32004, "unknown or expired file operation", nil)
-		}
-		return v2.Success(req.ID, gin.H{"status": "success"})
 	case v2.MethodAgentStartupConfigResult:
 		var params v2.StartupConfigResult
 		if err := bindV2Params(req.Params, &params); err != nil {

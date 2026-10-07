@@ -34,6 +34,16 @@ func TestRemovedRemoteControlEndpointsRejectRequests(t *testing.T) {
 		{http.MethodGet, "/terminal/"},
 		{http.MethodGet, "/admin/exec"},
 		{http.MethodGet, "/admin/settings/xtermjs"},
+		{http.MethodPost, "/api/admin/client/node/file/upload"},
+		{http.MethodGet, "/api/admin/client/node/file/download"},
+		{http.MethodHead, "/api/admin/client/node/file/download"},
+		{http.MethodGet, "/api/admin/client/node/file/preview-token"},
+		{http.MethodGet, "/api/clients/transfer/old-transfer"},
+		{http.MethodPost, "/api/clients/transfer/old-transfer"},
+		{http.MethodGet, "/api/preview/client/node/file/download?token=old-token"},
+		{http.MethodHead, "/api/preview/client/node/file/download?token=old-token"},
+		{http.MethodGet, "/admin/files"},
+		{http.MethodGet, "/admin/files/node"},
 	}
 	for _, test := range requests {
 		t.Run(test.method+" "+test.path, func(t *testing.T) {
@@ -55,7 +65,7 @@ func TestRemovedRemoteControlEndpointsRejectRequests(t *testing.T) {
 	}
 }
 
-func TestMonitoringAndFileTransferRoutesRemainRegistered(t *testing.T) {
+func TestMonitoringAndSiteManagementRoutesRemainRegistered(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	t.Chdir(t.TempDir())
 	engine := gin.New()
@@ -67,13 +77,19 @@ func TestMonitoringAndFileTransferRoutesRemainRegistered(t *testing.T) {
 	for _, route := range []string{
 		"GET /api/clients/v2/rpc",
 		"POST /api/clients/v2/rpc",
-		"GET /api/clients/transfer/:id",
-		"POST /api/clients/transfer/:id",
-		"GET /api/admin/client/:uuid/file/download",
-		"POST /api/admin/client/:uuid/file/upload",
 		"GET /api/task/ping",
 		"GET /api/admin/ping/",
 		"POST /api/rpc2",
+		"GET /api/admin/download/backup",
+		"POST /api/admin/upload/init",
+		"POST /api/admin/upload/chunk",
+		"POST /api/admin/upload/merge",
+		"POST /api/admin/upload/cancel",
+		"POST /api/admin/theme/import",
+		"POST /api/admin/theme/update",
+		"GET /api/admin/theme/list",
+		"POST /api/admin/plugin/market/install",
+		"GET /api/admin/plugin/list",
 	} {
 		if !routes[route] {
 			t.Errorf("unrelated route was removed: %s", route)
@@ -81,7 +97,8 @@ func TestMonitoringAndFileTransferRoutesRemainRegistered(t *testing.T) {
 	}
 	for route := range routes {
 		if strings.Contains(route, "/terminal") || strings.Contains(route, "/xtermjs") ||
-			strings.Contains(route, "/api/admin/task/") {
+			strings.Contains(route, "/api/admin/task/") || strings.Contains(route, "/file/") ||
+			strings.Contains(route, "/api/clients/transfer/") {
 			t.Errorf("removed remote control route is still registered: %s", route)
 		}
 	}

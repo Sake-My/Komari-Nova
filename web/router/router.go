@@ -5,7 +5,6 @@ import (
 	"github.com/Sake-My/Komari-Nova/web/api/admin"
 	"github.com/Sake-My/Komari-Nova/web/api/client"
 	public_api "github.com/Sake-My/Komari-Nova/web/api/public"
-	"github.com/Sake-My/Komari-Nova/web/filemanager"
 	"github.com/Sake-My/Komari-Nova/web/public"
 	jsonRpc "github.com/Sake-My/Komari-Nova/web/rpc/jsonrpc"
 	"github.com/gin-gonic/gin"
@@ -38,9 +37,6 @@ func registerPublicRoutes(r *gin.Engine) {
 	r.GET("/api/oauth_callback", public_api.OAuthCallback)
 	// 插件公开页面（visibility=public 的 iframe 页面），无需鉴权。
 	r.GET("/api/plugin/:short/*filepath", public_api.ServePluginFile)
-	// 短期文件预览令牌公开下载入口，供 Office 在线预览等服务端抓取。
-	r.GET("/api/preview/client/:uuid/file/download", filemanager.PreviewDownload)
-	r.HEAD("/api/preview/client/:uuid/file/download", filemanager.PreviewDownload)
 	// /api/clients 是 WebSocket 端点（客户端发 "get"/"get <uuid>" 拉取在线列表与最新上报），
 	// 非 JSON-RPC，保留为 WS handler。
 	r.GET("/api/clients", api.GetClients)
@@ -70,9 +66,6 @@ func registerAgentRoutes(r *gin.Engine) {
 		// Agent 上报统一使用 v2 JSON-RPC。
 		tokenAuthorized.GET("/v2/rpc", client.WebSocketV2RPC)
 		tokenAuthorized.POST("/v2/rpc", client.UploadV2RPC)
-		// File data uses a short-lived, raw HTTP stream opened by a file RPC.
-		tokenAuthorized.GET("/transfer/:id", filemanager.AgentTransfer)
-		tokenAuthorized.POST("/transfer/:id", filemanager.AgentTransfer)
 	}
 }
 
@@ -160,10 +153,6 @@ func registerAdminRoutes(r *gin.Engine) {
 		clientGroup.POST("/:uuid/remove", jsonRpc.Bind("admin:removeClient", jsonRpc.WithPath("uuid")))
 		clientGroup.GET("/:uuid/token", jsonRpc.Bind("admin:getClientToken", jsonRpc.WithPath("uuid"), jsonRpc.WithFlat()))
 		clientGroup.POST("/order", jsonRpc.Bind("admin:orderClients"))
-		clientGroup.POST("/:uuid/file/upload", filemanager.Upload)
-		clientGroup.GET("/:uuid/file/download", filemanager.Download)
-		clientGroup.HEAD("/:uuid/file/download", filemanager.Download)
-		clientGroup.GET("/:uuid/file/preview-token", filemanager.CreatePreviewToken)
 	}
 
 	// records

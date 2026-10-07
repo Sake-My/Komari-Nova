@@ -119,6 +119,8 @@ func isRemovedRemoteControlPath(requestPath string) bool {
 	for _, prefix := range []string{
 		"/terminal",
 		"/admin/exec",
+		"/admin/files",
+		"/api/clients/transfer",
 		"/admin/settings/xtermjs",
 		"/api/admin/task",
 		"/api/admin/settings/xtermjs",
@@ -128,12 +130,16 @@ func isRemovedRemoteControlPath(requestPath string) bool {
 			return true
 		}
 	}
-	clientPath, ok := strings.CutPrefix(requestPath, "/api/admin/client/")
-	if !ok {
-		return false
+	if clientPath, ok := strings.CutPrefix(requestPath, "/api/admin/client/"); ok {
+		_, resource, ok := strings.Cut(clientPath, "/")
+		return ok && (resource == "terminal" || strings.HasPrefix(resource, "terminal/") ||
+			resource == "file" || strings.HasPrefix(resource, "file/"))
 	}
-	_, resource, ok := strings.Cut(clientPath, "/")
-	return ok && (resource == "terminal" || strings.HasPrefix(resource, "terminal/"))
+	if clientPath, ok := strings.CutPrefix(requestPath, "/api/preview/client/"); ok {
+		_, resource, ok := strings.Cut(clientPath, "/")
+		return ok && (resource == "file" || strings.HasPrefix(resource, "file/"))
+	}
+	return false
 }
 
 // Static 注册静态资源和 SPA 路由处理

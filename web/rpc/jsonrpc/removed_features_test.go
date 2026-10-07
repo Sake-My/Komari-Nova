@@ -7,10 +7,20 @@ import (
 	"github.com/Sake-My/Komari-Nova/pkg/rpc"
 )
 
-func TestRemovedRemoteExecutionMethodsUnavailableToAdmin(t *testing.T) {
+func TestRemovedRemoteControlMethodsUnavailableToAdmin(t *testing.T) {
 	methods := []string{
 		"admin:switchAgentVersion",
 		"admin:exec",
+		"admin:fileList",
+		"admin:fileListRoots",
+		"admin:fileStat",
+		"admin:fileMkdir",
+		"admin:fileDelete",
+		"admin:fileMove",
+		"admin:fileCopy",
+		"admin:fileChmod",
+		"admin:fileChown",
+		"admin:fileSearch",
 		"admin:getTasks",
 		"admin:getTaskById",
 		"admin:getTasksByClientId",

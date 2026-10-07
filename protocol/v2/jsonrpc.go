@@ -1,9 +1,6 @@
 package v2
 
-import (
-	"encoding/json"
-	"time"
-)
+import "time"
 
 const (
 	Version                        = "2.0"
@@ -14,8 +11,6 @@ const (
 	MethodAgentMessage             = "agent.message"
 	MethodAgentEvent               = "agent.event"
 	MethodAgentPull                = "agent.pull"
-	MethodAgentFile                = "agent.file"
-	MethodAgentFileResult          = "agent.file.result"
 	MethodAgentStartupConfig       = "agent.startupConfig"
 	MethodAgentStartupConfigResult = "agent.startupConfig.result"
 )
@@ -174,23 +169,6 @@ type StartupConfigResult struct {
 	RequestID string         `json:"request_id"`
 	Config    map[string]any `json:"config,omitempty"`
 	Error     string         `json:"error,omitempty"`
-}
-
-// FileOperation is metadata-only. File contents travel through the dedicated
-// HTTP transfer endpoint rather than through JSON-RPC.
-type FileOperation struct {
-	UUID      string         `json:"uuid"`
-	RequestID string         `json:"request_id"`
-	Op        string         `json:"op"`
-	Args      map[string]any `json:"args,omitempty"`
-}
-
-type FileResult struct {
-	UUID      string          `json:"uuid"`
-	RequestID string          `json:"request_id"`
-	OK        bool            `json:"ok"`
-	Result    json.RawMessage `json:"result,omitempty"`
-	Error     string          `json:"error,omitempty"`
 }
 
 func Success(id any, result any) Response {

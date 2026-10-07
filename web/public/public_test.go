@@ -150,3 +150,35 @@ func TestStaticRestrictedDoesNotServeCustomAssetOverride(t *testing.T) {
 		t.Fatal("restricted index still registers a service worker")
 	}
 }
+
+func TestRemovedFileManagerPathsDoNotBlockSiteManagement(t *testing.T) {
+	for _, requestPath := range []string{
+		"/admin/files",
+		"/admin/files/node",
+		"/api/clients/transfer/transfer-id",
+		"/api/admin/client/node/file/upload",
+		"/api/admin/client/node/file/download",
+		"/api/admin/client/node/file/preview-token",
+		"/api/preview/client/node/file/download",
+	} {
+		if !isRemovedRemoteControlPath(requestPath) {
+			t.Errorf("removed file manager path may reach SPA fallback: %s", requestPath)
+		}
+	}
+	for _, requestPath := range []string{
+		"/admin/filesettings",
+		"/api/clients/transfer-status",
+		"/api/clients/v2/rpc",
+		"/api/admin/client/node",
+		"/api/admin/client/node/file-settings",
+		"/api/admin/download/backup",
+		"/api/admin/upload/init",
+		"/api/admin/theme/import",
+		"/api/admin/plugin/market/install",
+		"/api/rpc2",
+	} {
+		if isRemovedRemoteControlPath(requestPath) {
+			t.Errorf("unrelated route blocked by file manager removal: %s", requestPath)
+		}
+	}
+}
