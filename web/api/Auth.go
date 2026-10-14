@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Sake-My/Komari-Nova/database/accounts"
 	"github.com/Sake-My/Komari-Nova/database/clients"
 	"github.com/Sake-My/Komari-Nova/internal/config"
 	"github.com/Sake-My/Komari-Nova/pkg/rpc"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +29,18 @@ const (
 // api_key/session/client_uuid)以兼容现有 handler 与中间件。
 func IdentityMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 主体识别会读取请求体；Passkey 必须在此之前限长，避免认证器响应无限分配。
+		if strings.HasPrefix(c.Request.URL.Path, "/api/login/passkey/") || strings.HasPrefix(c.Request.URL.Path, "/api/admin/passkey") {
+			if c.Request.Body != nil {
+				body, err := io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, 128<<10))
+				if err != nil {
+					RespondError(c, http.StatusRequestEntityTooLarge, "Passkey request body is too large")
+					c.Abort()
+					return
+				}
+				c.Request.Body = io.NopCloser(bytes.NewReader(body))
+			}
+		}
 		p := IdentifyPrincipal(c)
 		SetPrincipal(c, p)
 

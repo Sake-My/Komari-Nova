@@ -5,6 +5,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      frontend_ref:
+        description: komari-web branch or tag to build (empty uses its default branch).
+        required: false
+        default: ''
+        type: string
 
 jobs:
   build-frontend:
@@ -18,6 +24,7 @@ jobs:
         uses: ./.github/actions/build-frontend
         with:
           artifact-name: komari-frontend
+          ref: ${{ inputs.frontend_ref }}
 
   build-binaries:
     needs: build-frontend

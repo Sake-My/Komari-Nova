@@ -448,6 +448,7 @@ func doInitialize() error {
 
 	err = instance.AutoMigrate(
 		&models.User{},
+		&models.PasskeyCredential{},
 		&models.Client{},
 		&models.Log{},
 		&models.Clipboard{},

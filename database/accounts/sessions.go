@@ -13,6 +13,7 @@ import (
 	"github.com/Sake-My/Komari-Nova/utils"
 	"github.com/Sake-My/Komari-Nova/utils/geoip"
 	"github.com/Sake-My/Komari-Nova/utils/messageSender"
+	"gorm.io/gorm"
 )
 
 // GetAllSessions 获取所有会话
@@ -28,6 +29,15 @@ func GetAllSessions() (sessions []models.Session, err error) {
 // CreateSession 创建新会话
 func CreateSession(uuid string, expires int, userAgent, ip, login_method string) (string, error) {
 	db := dbcore.GetDBInstance()
+	token, err := createSession(db, uuid, expires, userAgent, ip, login_method)
+	if err != nil {
+		return "", err
+	}
+	notifyLogin(userAgent, ip, login_method)
+	return token, nil
+}
+
+func createSession(db *gorm.DB, uuid string, expires int, userAgent, ip, login_method string) (string, error) {
 	session := utils.GenerateRandomString(32)
 
 	sessionRecord := models.Session{
@@ -39,6 +49,13 @@ func CreateSession(uuid string, expires int, userAgent, ip, login_method string)
 		LoginMethod:  login_method,
 		LatestOnline: time.Now().UTC(),
 	}
+	if err := db.Create(&sessionRecord).Error; err != nil {
+		return "", err
+	}
+	return session, nil
+}
+
+func notifyLogin(userAgent, ip, login_method string) {
 	go func() {
 		LoginNotification, _ := config.GetAs[bool](config.LoginNotificationKey, false)
 		if LoginNotification {
@@ -57,11 +74,6 @@ func CreateSession(uuid string, expires int, userAgent, ip, login_method string)
 		}
 	}()
 
-	err := db.Create(&sessionRecord).Error
-	if err != nil {
-		return "", err
-	}
-	return session, nil
 }
 
 // GetSession 根据会话 ID 获取 UUID

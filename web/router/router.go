@@ -32,6 +32,8 @@ func Register(r *gin.Engine) {
 func registerPublicRoutes(r *gin.Engine) {
 	// 非 JSON / 特殊流程，保留 REST handler。
 	r.POST("/api/login", public_api.Login)
+	r.POST("/api/login/passkey/begin", public_api.PasskeyLoginBegin)
+	r.POST("/api/login/passkey/finish", public_api.PasskeyLoginFinish)
 	r.GET("/api/logout", public_api.Logout)
 	r.GET("/api/oauth", public_api.OAuth)
 	r.GET("/api/oauth_callback", public_api.OAuthCallback)
@@ -72,6 +74,11 @@ func registerAgentRoutes(r *gin.Engine) {
 // registerAdminRoutes 管理员路由。除二进制/流类外全部经 Bind 绑定到 admin: 命名空间方法。
 func registerAdminRoutes(r *gin.Engine) {
 	g := r.Group("/api/admin", api.RequireRole(api.RoleAdmin))
+	g.GET("/passkey", public_api.PasskeyList)
+	g.POST("/passkey/register/begin", public_api.PasskeyRegisterBegin)
+	g.POST("/passkey/register/finish", public_api.PasskeyRegisterFinish)
+	g.PATCH("/passkey/:id", public_api.PasskeyRename)
+	g.DELETE("/passkey/:id", public_api.PasskeyDelete)
 	admin.RegisterPprofRoutes(g)
 
 	// --- 二进制/流/重定向类，保留 REST handler ---

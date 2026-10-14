@@ -12,15 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Sake-My/Komari-Nova/database/dbcore"
-	"github.com/Sake-My/Komari-Nova/internal/metricstore"
 	appconfig "github.com/Sake-My/Komari-Nova/internal/config"
+	"github.com/Sake-My/Komari-Nova/internal/metricstore"
 	"github.com/Sake-My/Komari-Nova/internal/migrations"
 	"github.com/Sake-My/Komari-Nova/pkg/metric"
 	"github.com/Sake-My/Komari-Nova/web/api"
 	publicapi "github.com/Sake-My/Komari-Nova/web/api/public"
 	jsonrpc "github.com/Sake-My/Komari-Nova/web/rpc/jsonrpc"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -115,6 +115,8 @@ func (c *Controller) Done() <-chan struct{} { return c.done }
 
 func (c *Controller) Register(r *gin.Engine) {
 	r.POST("/api/login", publicapi.Login)
+	r.POST("/api/login/passkey/begin", publicapi.PasskeyLoginBegin)
+	r.POST("/api/login/passkey/finish", publicapi.PasskeyLoginFinish)
 	r.GET("/api/me", jsonrpc.Bind("public:getMe", jsonrpc.WithRaw()))
 	r.GET("/api/oauth", publicapi.OAuth)
 	r.GET("/api/oauth_callback", publicapi.OAuthCallback)
@@ -145,6 +147,7 @@ func (c *Controller) authStatus(ctx *gin.Context) {
 		"oauth_enabled":          oauthEnabled,
 		"oauth_provider":         oauthProvider,
 		"password_login_enabled": !disablePassword,
+		"passkey_enabled":        appconfig.PasskeyAvailable(),
 		"mode":                   c.mode,
 	})
 }

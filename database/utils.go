@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Sake-My/Komari-Nova/database/dbcore"
 	"github.com/Sake-My/Komari-Nova/database/models"
 	"github.com/Sake-My/Komari-Nova/internal/config"
@@ -14,6 +13,7 @@ import (
 	"github.com/Sake-My/Komari-Nova/internal/metricstore"
 	logger "github.com/Sake-My/Komari-Nova/utils/log"
 	"github.com/Sake-My/Komari-Nova/web/public"
+	"github.com/gin-gonic/gin"
 )
 
 func GetPublicInfo() (map[string]interface{}, error) {
@@ -93,6 +93,7 @@ func GetPublicInfo() (map[string]interface{}, error) {
 		"oauth_enable":              cst.OAuthEnabled,
 		"oauth_provider":            cst.OAuthProvider,
 		"disable_password_login":    cst.DisablePasswordLogin,
+		"passkey_enabled":           config.PasskeyAvailable(),
 		"cors_origin_check_enabled": cst.CorsOriginCheckEnabled,
 		"record_enabled":            retention.AllPositive, // 兼容旧版本主题
 		"record_preserve_time":      retention.MaxDays * 24,

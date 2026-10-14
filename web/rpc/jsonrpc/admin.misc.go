@@ -143,6 +143,9 @@ func adminEditSettings(ctx context.Context, req *rpc.JsonRpcRequest) (any, *rpc.
 		return nil, rpc.MakeError(rpc.InvalidParams, "Invalid or missing request body: "+err.Error(), nil)
 	}
 	removeRetiredLowResourceMode(cfg)
+	if err := validatePasskeySettingChanges(cfg); err != nil {
+		return nil, rpc.MakeError(rpc.InvalidParams, err.Error(), nil)
+	}
 	if err := validateMetricRollupSettingChanges(cfg); err != nil {
 		return nil, rpc.MakeError(rpc.InvalidParams, err.Error(), nil)
 	}
