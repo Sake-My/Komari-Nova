@@ -23,6 +23,7 @@ type Client struct {
 	IPv4             string     `json:"ipv4,omitempty" gorm:"type:varchar(100)"`
 	IPv6             string     `json:"ipv6,omitempty" gorm:"type:varchar(100)"`
 	Region           string     `json:"region" gorm:"type:varchar(100)"`
+	RegionOverride   string     `json:"region_override" gorm:"type:varchar(2);not null;default:''"`
 	Remark           string     `json:"remark,omitempty" gorm:"type:longtext"`
 	PublicRemark     string     `json:"public_remark,omitempty" gorm:"type:longtext"`
 	MemTotal         int64      `json:"mem_total" gorm:"type:bigint"`

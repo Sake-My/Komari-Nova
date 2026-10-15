@@ -25,6 +25,12 @@ func DeleteClient(clientUuid string) error {
 }
 
 func SaveClientInfo(update map[string]interface{}) error {
+	// 手动地区仅允许管理员设置，Agent 上报不能新增、修改或清空该字段。
+	for key := range update {
+		if isRegionOverrideKey(key) {
+			delete(update, key)
+		}
+	}
 	db := dbcore.GetDBInstance()
 	clientUUID, ok := update["uuid"].(string)
 	if !ok || clientUUID == "" {
@@ -188,6 +194,7 @@ func GetClientByUUID(uuid string) (client models.Client, err error) {
 	if err != nil {
 		return models.Client{}, err
 	}
+	applyRegionOverride(&client)
 	return client, nil
 }
 
@@ -207,10 +214,16 @@ func GetAllClientBasicInfo() (clients []models.Client, err error) {
 	if err != nil {
 		return nil, err
 	}
+	for i := range clients {
+		applyRegionOverride(&clients[i])
+	}
 	return clients, nil
 }
 
 func SaveClient(updates map[string]interface{}) error {
+	if err := normalizeRegionOverrideUpdate(updates); err != nil {
+		return err
+	}
 	db := dbcore.GetDBInstance()
 	clientUUID, ok := updates["uuid"].(string)
 	if !ok || clientUUID == "" {

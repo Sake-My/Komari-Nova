@@ -2,11 +2,12 @@ package jsonrpc
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Sake-My/Komari-Nova/database/auditlog"
 	"github.com/Sake-My/Komari-Nova/database/clients"
-	"github.com/Sake-My/Komari-Nova/internal/metricstore"
 	"github.com/Sake-My/Komari-Nova/database/records"
+	"github.com/Sake-My/Komari-Nova/internal/metricstore"
 	"github.com/Sake-My/Komari-Nova/pkg/rpc"
 	agent_runtime "github.com/Sake-My/Komari-Nova/web/agent"
 )
@@ -29,6 +30,7 @@ func init() {
 		Summary: "Edit a client (partial update)",
 		Params: []rpc.ParamMeta{
 			{Name: "uuid", Type: "string", Required: true, Description: "Client UUID"},
+			{Name: "region_override", Type: "string", Required: false, Description: "Manual two-letter country/region code; empty restores automatic GeoIP"},
 		},
 		Returns: "null",
 	})
@@ -112,6 +114,9 @@ func adminEditClient(ctx context.Context, req *rpc.JsonRpcRequest) (any, *rpc.Js
 		return nil, rpc.MakeError(rpc.InvalidParams, "Invalid or missing UUID", nil)
 	}
 	if err := clients.SaveClient(update); err != nil {
+		if errors.Is(err, clients.ErrInvalidRegionOverride) {
+			return nil, rpc.MakeError(rpc.InvalidParams, err.Error(), nil)
+		}
 		return nil, rpc.MakeError(rpc.InternalError, err.Error(), nil)
 	}
 	actor, ip := auditActor(ctx)
