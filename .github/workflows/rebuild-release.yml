@@ -73,6 +73,10 @@ jobs:
             goarch: riscv64
             zig_target_triple: riscv64-linux-musl
             binary_extension: ""
+          - goos: linux
+            goarch: loong64
+            zig_target_triple: loongarch64-linux-musl
+            binary_extension: ""
 
     steps:
       - name: Checkout server source
@@ -152,12 +156,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
+      - name: Resolve source revision
+        id: release
+        run: echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.release_tag }}
+          labels: |
+            org.opencontainers.image.revision=${{ steps.release.outputs.revision }}
+
       - name: Build and push version Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.release_tag }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
           provenance: false
+
+      - name: Promote Docker latest tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
+          if [ "$TAG" = "$latest_tag" ]; then
+            docker buildx imagetools create --tag "${REGISTRY}/${IMAGE_NAME}:latest" "${REGISTRY}/${IMAGE_NAME}:${TAG}"
+          fi
