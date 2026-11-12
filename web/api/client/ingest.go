@@ -46,8 +46,13 @@ func ingestBasicInfo(uuid string, info map[string]interface{}, fallbackIP string
 
 // ingestPingResult 保存一条 ping 探测结果。
 func ingestPingResult(uuid string, taskID uint, value int) error {
+	// 来源取自已认证的 Agent 会话；入口任务的结果归属由服务端配置决定。
+	resultClient, err := tasks.ResolvePingRecordClient(taskID, uuid)
+	if err != nil {
+		return err
+	}
 	return tasks.SavePingRecord(models.PingRecord{
-		Client: uuid,
+		Client: resultClient,
 		TaskId: taskID,
 		Value:  value,
 		Time:   time.Now().UTC(),

@@ -21,7 +21,8 @@ func DeleteClient(clientUuid string) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	// 入口任务保留配置和历史；重载时停用涉及已删除节点的探测。
+	return tasks.ReloadPingSchedule()
 }
 
 func SaveClientInfo(update map[string]interface{}) error {

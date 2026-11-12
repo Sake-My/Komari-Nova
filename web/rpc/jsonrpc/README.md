@@ -150,3 +150,11 @@ r.GET("/api/admin/client/:uuid", jsonRpc.Bind("admin:getClient", jsonRpc.WithPat
 `web/api/public`（login/logout/oauth/plugin）、`web/api/client`（v2 RPC、AutoDiscovery 注册）。
 
 agent v2 上报的核心逻辑统一在 `web/api/client/ingest.go`。
+
+### 入口 IP 探测任务
+
+- `admin:addPingTask` 增加可选 `target_client`。为空时保持普通出站任务；非空时为被测 VPS UUID，`clients` 必须恰好包含另一台已接入 Agent 的 UUID，`default_on` 必须为 `false`。入口任务支持 `icmp`（IP）和 `tcp`（IP:端口，IPv6 使用方括号）。
+- 每条入口任务固定来源、被测 VPS、入口地址和协议，编辑时只允许调整名称和间隔；更换线路需创建新任务。`admin:editPingTask` 中省略 `target_client` 会保留已有关联。
+- 下发继续使用 `agent.ping`。`agent.pingResult` 的来源由已认证会话确定；服务端校验任务归属后，将入口指标的 `entity_id` 设为被测 VPS UUID，`task_id` 保持不变。普通任务仍写入探测 Agent 的指标。
+- `public:getPublicPingTasks` 的入口任务 `clients` 表示结果归属（即 `[target_client]`）；返回 `target_client`、`probe_source_online`，可见来源还返回 `probe_source` 与 `probe_source_name`。入口地址和隐藏来源身份不公开，隐藏被测 VPS 的入口任务不向访客列出。
+- `public:getPingMetricStats` 的入口统计附带同样的来源信息，并在来源在线且有近期原始样本时返回 `current_value`、`current_time`。`-1` 表示实际探测失败；字段缺失表示无当前数据。当前状态独立于请求的历史统计范围，样本新鲜度窗口为 `max(3 × interval, 60)` 秒。`latest` 保留历史最后成功值的原语义，不能用来判断当前可达性。

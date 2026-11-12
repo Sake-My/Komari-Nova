@@ -87,6 +87,14 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Test backend monitoring and entry probes
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
+        env:
+          CGO_ENABLED: '1'
+          CC: gcc
+          GIN_MODE: release
+        run: go test -count=1 -timeout 5m ./database/models ./database/tasks ./database/clients ./utils ./web/api/client ./web/rpc/jsonrpc
+
       - name: Install Zig cross-compiler toolchain
         uses: ./.github/actions/setup-zig
 

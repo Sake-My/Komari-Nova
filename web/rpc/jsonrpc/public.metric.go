@@ -96,6 +96,7 @@ type publicPingMetricStatsParams struct {
 }
 
 type publicPingMetricTaskStats struct {
+	publicEntryProbeInfo
 	EntityID        string            `json:"entity_id"`
 	TaskID          string            `json:"task_id"`
 	Name            string            `json:"name,omitempty"`
@@ -110,6 +111,8 @@ type publicPingMetricTaskStats struct {
 	Max             *float64          `json:"max,omitempty"`
 	Avg             *float64          `json:"avg,omitempty"`
 	Latest          *float64          `json:"latest,omitempty"`
+	CurrentValue    *float64          `json:"current_value,omitempty"`
+	CurrentTime     *time.Time        `json:"current_time,omitempty"`
 	P50             *float64          `json:"p50,omitempty"`
 	P99             *float64          `json:"p99,omitempty"`
 	StdDev          *float64          `json:"stddev,omitempty"`
@@ -469,6 +472,14 @@ func publicGetPingMetricStats(ctx context.Context, req *rpc.JsonRpcRequest) (any
 	for _, entityID := range entityIDs {
 		stats = append(stats, publicPingStatsFromAggregateGroups(entityID, groupsByEntity[entityID], taskMap, taskFilter)...)
 	}
+	view, err := loadPingTaskVisibility(ctx, taskList)
+	if err != nil {
+		return nil, rpc.MakeError(rpc.InternalError, "Failed to load probe nodes", nil)
+	}
+	stats, err = enrichEntryPingStats(ctx, store, stats, taskList, entityIDs, taskFilter, view, now)
+	if err != nil {
+		return nil, rpc.MakeError(rpc.InternalError, "Failed to query current entry probes", nil)
+	}
 
 	sort.Slice(stats, func(i, j int) bool {
 		if stats[i].EntityID != stats[j].EntityID {
@@ -484,6 +495,70 @@ func publicGetPingMetricStats(ctx context.Context, req *rpc.JsonRpcRequest) (any
 		Stats:           stats,
 		Count:           len(stats),
 	}, nil
+}
+
+// enrichEntryPingStats 将当前入口状态与历史统计分开。缺样本或探测源离线时不合成失败。
+// current_time 只使用原始样本时间，不能把聚合桶或最后成功值当作当前探测结果。
+func enrichEntryPingStats(ctx context.Context, store *metric.Store, stats []publicPingMetricTaskStats, taskList []models.PingTask, entityIDs []string, taskFilter map[string]bool, view pingTaskVisibility, now time.Time) ([]publicPingMetricTaskStats, error) {
+	entities := make(map[string]bool, len(entityIDs))
+	for _, id := range entityIDs {
+		entities[id] = true
+	}
+	taskMap := make(map[string]models.PingTask, len(taskList))
+	for _, task := range taskList {
+		taskMap[strconv.FormatUint(uint64(task.Id), 10)] = task
+	}
+	filtered := stats[:0]
+	for _, stat := range stats {
+		task := taskMap[stat.TaskID]
+		if task.TargetClient != "" && (!view.allows(task) || stat.EntityID != task.TargetClient) {
+			continue
+		}
+		filtered = append(filtered, stat)
+	}
+	stats = filtered
+	for _, task := range taskList {
+		if task.TargetClient == "" || !entities[task.TargetClient] || !view.allows(task) {
+			continue
+		}
+		taskID := strconv.FormatUint(uint64(task.Id), 10)
+		if len(taskFilter) > 0 && !taskFilter[taskID] {
+			continue
+		}
+		index := -1
+		for i := range stats {
+			if stats[i].EntityID == task.TargetClient && stats[i].TaskID == taskID {
+				index = i
+				break
+			}
+		}
+		if index < 0 {
+			stats = append(stats, publicPingMetricTaskStats{
+				EntityID: task.TargetClient, TaskID: taskID, Name: task.Name, Type: task.Type,
+				Interval: task.Interval, Tags: map[string]string{"task_id": taskID},
+			})
+			index = len(stats) - 1
+		}
+		stat := &stats[index]
+		stat.publicEntryProbeInfo = view.entryInfo(task)
+		if !*stat.ProbeSourceOnline {
+			continue
+		}
+		freshness := max(time.Duration(task.Interval)*3*time.Second, time.Minute)
+		points, err := store.Query(ctx, metric.Query{
+			MetricName: metricstore.MetricPingLatency, EntityID: task.TargetClient,
+			Tags: map[string]string{"task_id": taskID}, Start: now.Add(-freshness), End: now,
+			Order: metric.OrderDesc, Limit: 1,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(points) > 0 {
+			value, timestamp := points[0].Value, points[0].Timestamp.UTC()
+			stat.CurrentValue, stat.CurrentTime = &value, &timestamp
+		}
+	}
+	return stats, nil
 }
 
 type publicMetricSeriesGroup struct {

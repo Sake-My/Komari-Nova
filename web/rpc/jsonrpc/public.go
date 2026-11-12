@@ -205,12 +205,13 @@ func publicGetRecordsByUUID(ctx context.Context, req *rpc.JsonRpcRequest) (any, 
 	return response, nil
 }
 
-func publicGetPublicPingTasks(_ context.Context, _ *rpc.JsonRpcRequest) (any, *rpc.JsonRpcError) {
+func publicGetPublicPingTasks(ctx context.Context, _ *rpc.JsonRpcRequest) (any, *rpc.JsonRpcError) {
 	pingTasks, err := tasks.GetAllPingTasks()
 	if err != nil {
 		return nil, rpc.MakeError(rpc.InternalError, err.Error(), nil)
 	}
 	type publicPingTask struct {
+		publicEntryProbeInfo
 		Id        uint     `json:"id"`
 		Weight    int      `json:"weight"`
 		Name      string   `json:"name"`
@@ -219,17 +220,25 @@ func publicGetPublicPingTasks(_ context.Context, _ *rpc.JsonRpcRequest) (any, *r
 		Type      string   `json:"type"`
 		Interval  int      `json:"interval"`
 	}
-	out := make([]publicPingTask, len(pingTasks))
-	for i, task := range pingTasks {
-		out[i] = publicPingTask{
-			Id:        task.Id,
-			Weight:    task.Weight,
-			Name:      task.Name,
-			Clients:   task.Clients,
-			DefaultOn: task.DefaultOn,
-			Type:      task.Type,
-			Interval:  task.Interval,
+	view, err := loadPingTaskVisibility(ctx, pingTasks)
+	if err != nil {
+		return nil, rpc.MakeError(rpc.InternalError, "Failed to load probe nodes", nil)
+	}
+	out := make([]publicPingTask, 0, len(pingTasks))
+	for _, task := range pingTasks {
+		if !view.allows(task) {
+			continue
 		}
+		out = append(out, publicPingTask{
+			publicEntryProbeInfo: view.entryInfo(task),
+			Id:                   task.Id,
+			Weight:               task.Weight,
+			Name:                 task.Name,
+			Clients:              pingResultClients(task),
+			DefaultOn:            task.DefaultOn,
+			Type:                 task.Type,
+			Interval:             task.Interval,
+		})
 	}
 	return out, nil
 }
@@ -399,7 +408,14 @@ func publicGetPingRecords(ctx context.Context, req *rpc.JsonRpcRequest) (any, *r
 			return nil, rpc.MakeError(rpc.InternalError, "Failed to fetch ping tasks: "+err.Error(), nil)
 		}
 		tasksList := make([]map[string]any, 0, len(pingTasks))
+		view, err := loadPingTaskVisibility(ctx, pingTasks)
+		if err != nil {
+			return nil, rpc.MakeError(rpc.InternalError, "Failed to load probe nodes", nil)
+		}
 		for _, t := range pingTasks {
+			if !view.allows(t) {
+				continue
+			}
 			if taskId != -1 && t.Id != uint(taskId) {
 				continue
 			}
@@ -442,8 +458,9 @@ func publicGetPingRecords(ctx context.Context, req *rpc.JsonRpcRequest) (any, *r
 				"max": maxLatency, "avg": avgLatency, "total": totalCount,
 			}
 			if params.UUID == "" && taskId != -1 {
-				taskInfo["clients"] = t.Clients
+				taskInfo["clients"] = pingResultClients(t)
 			}
+			addEntryProbeMetadata(taskInfo, view.entryInfo(t))
 			tasksList = append(tasksList, taskInfo)
 		}
 		response.Tasks = tasksList

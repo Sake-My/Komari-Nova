@@ -269,7 +269,14 @@ func getRecords(ctx context.Context, req *rpc.JsonRpcRequest) (any, *rpc.JsonRpc
 			return nil, rpc.MakeError(rpc.InternalError, "Failed to fetch ping tasks", err.Error())
 		}
 		toList := make([]map[string]any, 0, len(pingTasks))
+		view, err := loadPingTaskVisibility(ctx, pingTasks)
+		if err != nil {
+			return nil, rpc.MakeError(rpc.InternalError, "Failed to load probe nodes", nil)
+		}
 		for _, t := range pingTasks {
+			if !view.allows(t) {
+				continue
+			}
 			if taskId != -1 && t.Id != uint(taskId) {
 				continue
 			}
@@ -376,8 +383,9 @@ func getRecords(ctx context.Context, req *rpc.JsonRpcRequest) (any, *rpc.JsonRpc
 				"p99_p50_ratio": ratio,
 			}
 			if params.UUID == "" && taskId != -1 { // retain existing behavior of exposing clients only when filtering by task
-				info["clients"] = t.Clients
+				info["clients"] = pingResultClients(t)
 			}
+			addEntryProbeMetadata(info, view.entryInfo(t))
 			toList = append(toList, info)
 		}
 		response.Tasks = toList

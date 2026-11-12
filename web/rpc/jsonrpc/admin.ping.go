@@ -2,7 +2,10 @@ package jsonrpc
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 
+	"github.com/Sake-My/Komari-Nova/database/dbcore"
 	"github.com/Sake-My/Komari-Nova/database/models"
 	"github.com/Sake-My/Komari-Nova/database/tasks"
 	"github.com/Sake-My/Komari-Nova/pkg/rpc"
@@ -41,22 +44,28 @@ func init() {
 
 func adminAddPingTask(_ context.Context, req *rpc.JsonRpcRequest) (any, *rpc.JsonRpcError) {
 	var params struct {
-		Clients   []string `json:"clients"`
-		DefaultOn bool     `json:"default_on"`
-		Name      string   `json:"name"`
-		Target    string   `json:"target"`
-		TaskType  string   `json:"type"`
-		Interval  int      `json:"interval"`
+		Clients      []string `json:"clients"`
+		DefaultOn    bool     `json:"default_on"`
+		Name         string   `json:"name"`
+		Target       string   `json:"target"`
+		TaskType     string   `json:"type"`
+		Interval     int      `json:"interval"`
+		TargetClient string   `json:"target_client"`
 	}
-	req.BindParams(&params)
+	if err := req.BindParams(&params); err != nil {
+		return nil, rpc.MakeError(rpc.InvalidParams, "Invalid request data", nil)
+	}
 	if params.Name == "" || params.Target == "" || params.TaskType == "" || params.Interval == 0 {
 		return nil, rpc.MakeError(rpc.InvalidParams, "name, target, type and interval are required", nil)
 	}
 	if !params.DefaultOn && len(params.Clients) == 0 {
 		return nil, rpc.MakeError(rpc.InvalidParams, "clients is required when default_on is false", nil)
 	}
-	taskID, err := tasks.AddPingTask(params.Clients, params.DefaultOn, params.Name, params.Target, params.TaskType, params.Interval)
+	taskID, err := tasks.AddPingTask(params.Clients, params.DefaultOn, params.Name, params.Target, params.TaskType, params.Interval, params.TargetClient)
 	if err != nil {
+		if errors.Is(err, tasks.ErrInvalidPingTask) {
+			return nil, rpc.MakeError(rpc.InvalidParams, err.Error(), nil)
+		}
 		return nil, rpc.MakeError(rpc.InternalError, err.Error(), nil)
 	}
 	return map[string]any{"task_id": taskID}, nil
@@ -78,18 +87,38 @@ func adminDeletePingTask(_ context.Context, req *rpc.JsonRpcRequest) (any, *rpc.
 
 func adminEditPingTask(_ context.Context, req *rpc.JsonRpcRequest) (any, *rpc.JsonRpcError) {
 	var params struct {
-		Tasks []*models.PingTask `json:"tasks"`
+		Tasks []json.RawMessage `json:"tasks"`
 	}
-	req.BindParams(&params)
+	if err := req.BindParams(&params); err != nil {
+		return nil, rpc.MakeError(rpc.InvalidParams, "Invalid request data", nil)
+	}
 	if len(params.Tasks) == 0 {
 		return nil, rpc.MakeError(rpc.InvalidParams, "Invalid request data", nil)
 	}
-	for _, task := range params.Tasks {
-		if task == nil {
+	updates := make([]*models.PingTask, 0, len(params.Tasks))
+	for _, raw := range params.Tasks {
+		var task *models.PingTask
+		if err := json.Unmarshal(raw, &task); err != nil || task == nil || task.Id == 0 {
 			return nil, rpc.MakeError(rpc.InvalidParams, "Invalid request data", nil)
 		}
+		var fields map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &fields); err != nil {
+			return nil, rpc.MakeError(rpc.InvalidParams, "Invalid request data", nil)
+		}
+		// 兼容尚未发送新字段的编辑界面，避免清除入口关联。
+		if _, supplied := fields["target_client"]; !supplied {
+			var existing models.PingTask
+			if err := dbcore.GetDBInstance().Select("id", "target_client").First(&existing, task.Id).Error; err != nil {
+				return nil, rpc.MakeError(rpc.InvalidParams, "Ping task not found", nil)
+			}
+			task.TargetClient = existing.TargetClient
+		}
+		updates = append(updates, task)
 	}
-	if err := tasks.EditPingTask(params.Tasks); err != nil {
+	if err := tasks.EditPingTask(updates); err != nil {
+		if errors.Is(err, tasks.ErrInvalidPingTask) {
+			return nil, rpc.MakeError(rpc.InvalidParams, err.Error(), nil)
+		}
 		return nil, rpc.MakeError(rpc.InternalError, err.Error(), nil)
 	}
 	return nil, nil

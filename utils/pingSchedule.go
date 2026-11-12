@@ -72,6 +72,20 @@ func executePingTask(ctx context.Context, task models.PingTask) {
 
 // targetPingClientUUIDs 根据任务配置计算本次调度需要下发的在线服务器列表。
 func targetPingClientUUIDs(task models.PingTask) []string {
+	if task.TargetClient != "" {
+		// 入口探测只向在线来源下发。目标 VPS 的 Agent 是否在线不影响入口可达性探测。
+		online := make(map[string]bool)
+		for _, uuid := range agent_runtime.GetAllOnlineUUIDs() {
+			online[uuid] = true
+		}
+		result := make([]string, 0, len(task.Clients))
+		for _, uuid := range task.Clients {
+			if uuid != task.TargetClient && online[uuid] {
+				result = append(result, uuid)
+			}
+		}
+		return result
+	}
 	return task.Clients
 }
 

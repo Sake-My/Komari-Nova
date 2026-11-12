@@ -3,15 +3,11 @@ package tasks
 import (
 	"testing"
 
-	"github.com/Sake-My/Komari-Nova/cmd/flags"
-	"github.com/Sake-My/Komari-Nova/database/dbcore"
 	"github.com/Sake-My/Komari-Nova/database/models"
 )
 
 func TestGetAllPingTasksOrdersByWeightThenID(t *testing.T) {
-	flags.DatabaseType = flags.DatabaseTypeSQLite
-	flags.DatabaseFile = "file:ping_task_order?mode=memory&cache=shared"
-	db := dbcore.GetDBInstance()
+	db := setupPingTaskTestDB(t)
 
 	tasks := []models.PingTask{
 		{Name: "third", Weight: 2, Type: "icmp", Target: "third.example", Interval: 60},
@@ -35,9 +31,7 @@ func TestGetAllPingTasksOrdersByWeightThenID(t *testing.T) {
 }
 
 func TestUpdatePingTaskOrderAllowsUnchangedWeights(t *testing.T) {
-	flags.DatabaseType = flags.DatabaseTypeSQLite
-	flags.DatabaseFile = "file:ping_task_update_order?mode=memory&cache=shared"
-	db := dbcore.GetDBInstance()
+	db := setupPingTaskTestDB(t)
 
 	items := []models.PingTask{
 		{Name: "first", Weight: 0, Type: "icmp", Target: "first.example", Interval: 60},
@@ -67,9 +61,7 @@ func TestUpdatePingTaskOrderAllowsUnchangedWeights(t *testing.T) {
 }
 
 func TestGetPingTasksByClientOrdersByWeightThenID(t *testing.T) {
-	flags.DatabaseType = flags.DatabaseTypeSQLite
-	flags.DatabaseFile = "file:ping_task_client_order?mode=memory&cache=shared"
-	db := dbcore.GetDBInstance()
+	db := setupPingTaskTestDB(t)
 
 	items := []models.PingTask{
 		{Name: "third", Weight: 2, Clients: models.StringArray{"node-a"}, Type: "icmp", Target: "third.example", Interval: 60},
